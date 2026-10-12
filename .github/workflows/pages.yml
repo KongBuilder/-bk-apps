@@ -1,0 +1,31 @@
+name: BK Apps auto backup
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download latest BK Apps
+        run: |
+          curl -fsSL https://bk-apps-src.surge.sh/bk-apps-site.zip -o site.zip
+          mkdir -p _site && unzip -q site.zip -d _site && touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
